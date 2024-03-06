@@ -1,0 +1,314 @@
+---
+title: "MATH 9102 - Probability and Statistical Inference Assignment - 2"
+author: "Antonio Silva (D23129331@mytudublin.ie)"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    mathjax: "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+  pdf_document:
+    toc: true
+    toc_depth: '2'
+---
+
+```{r, echo = TRUE, results = "hide"}
+if (!require('knitr')) {
+  install.packages('knitr', repos = 'http://cran.us.r-project.org')
+}
+
+if (!require('ggplot2')) {
+  install.packages('knitr', repos = 'http://cran.us.r-project.org')
+}
+
+if (!require('ggpubr')) {
+  install.packages('ggpubr', repos = 'http://cran.us.r-project.org')
+}
+
+library(knitr)
+library(ggplot2)
+library(ggpubr)
+```
+
+# Question 1 [1 mark]
+A study was done in which the high daily temperature and the number of traffic
+accidents within the city were recorded. These sample data are shown as follows.
+```
+  temp <- c(91,56,75,68,50,39,98)
+  accidents <- c(2,9,7,6,6,10,1)
+  accTemp <- data.frame(temp, accidents)
+```
+Identify whether the data is positively correlated or negatively 
+correlated using a scatter plot. 
+
+## Answer 1
+
+```{r, echo = TRUE, dev='png'}
+temp <- c(91,56,75,68,50,39,98)
+accidents <- c(2,9,7,6,6,10,1)
+accTemp <- data.frame(temp, accidents)
+ggplot(data = accTemp, aes(x = temp, y = accidents))  + 
+  geom_point() + 
+  geom_smooth(formula = y ~ x, method = "lm", se = FALSE)
+```
+
+After we create the scatter plot and and the trend line we can tell that
+the correlation is negative.
+
+We can confirm calculating the correlation:
+```{r, echo = TRUE, results = 'markdown'}
+cor(accTemp$temp, accTemp$accidents)
+```
+
+# Question 2 [1 mark]
+
+Following data gives the readings of sugar level of 5 diabetic patient 
+before and after taking insulin. Using 1% level of significance test whether
+insulin has reduced sugar level.
+```
+  before <- c(350,400,250,200,180)
+  after <- c(200,300,200,150,120)
+```
+
+## Answer 2
+
+Because we are talking about related samples where the individual participants
+in single group measured at two different points the most suitable test is
+the *Paired samples t-test*.
+
+For the test we have the following Hypothesis: 
+* Null hypothesis: The insulin did not changed the sugar levels;
+* Alternative hypothesis: The insulin dropped the sugar levels.
+
+So we will use the mean, because the measurements are taken from the same 
+population, then they should fairly similar means.
+
+The significance is 1%. 
+
+$$
+\begin{cases}
+        H_0: \mu_d \ge 0 \ or \ \mu_{after} - \mu_{before} \ge 0 \\
+        H_a: \mu_d < 0 \ or \ \mu_{after} - \mu_{before} < 0  
+    \end{cases} 
+$$
+
+$$\alpha = 0.01$$
+
+In R we can execute the test using the `t.test` function.
+This is a one-tail test from the left side.
+
+So the Confidence Interval is $CI = 1 - \alpha = 0.99$
+
+```{r, echo = TRUE}
+  before <- c(350,400,250,200,180)
+  after <- c(200,300,200,150,120)
+  t.test(after, before, paired = TRUE, alternative = "less", conf.level = 0.99)
+```
+
+So we got the t-value of $-4.2401$ which is not in the $99\%$ region of acceptance: 
+$[-3.747, \infty[$. So it is safe to say that we *Reject the null hypothesis*
+and conclude that the *insuline dropped the sugar levels*.
+
+# Question 3 [2 marks]
+The following dataset includes the score of students in mathematics and 
+statistics. Justify with R code suitable correlation test. [Hint: Check for
+normality and test the data for correlation]
+
+```
+  maths <- c(50,54,56,59,60,62,61,65,67,71,71,74)
+  stat <- c(22,25,34,28,26,30,32,30,28,34,36,40)
+  scoreSet <- data.frame(maths, stat)
+```
+
+## Answer 3 [2 marks]
+
+First we start inspecting the both dataset to see if they belong to a normal
+distribution. We can start by defining the data and create a Q-Q plot. 
+As quoted in the labs of week 6:
+
+> A Q-Q plot is a scatterplot created by plotting two sets of quantiles agains
+> one another. If the both sets of quantiles come from the same distribution,
+> we will see the points forming a line.
+
+So to verify we can draw a Q-Q plot against the normal distribution first.
+
+First we introduce the data
+```{r, echo = TRUE}
+maths <- c(50,54,56,59,60,62,61,65,67,71,71,74)
+stat <- c(22,25,34,28,26,30,32,30,28,34,36,40)
+scoreSet <- data.frame(maths, stat)
+```
+
+And we create a Q-Q plot for each dataset (maths and stat)
+
+```{r, echo = TRUE, dev='png'}
+ggqqplot(maths, ylab = "Math Quantiles", xlab="Normal Quantiles")
+```
+
+```{r, echo = TRUE, dev='png'}
+ggqqplot(stat, ylab = "Stat Quantiles")
+```
+
+By the charts we can say that both datasets are close to a normal distribution,
+but we can't assume that follows it.
+
+To make sure its better to conduct a statistical normality test.
+So we will run *Shapiro-Wilk test* against the datasets.
+
+For the Shapiro Wilk tests we apply the following formula:
+$$
+W = \frac{(\sum a_ixi)^2}{\sum(x_i - \bar{x})^2}
+$$
+If the test is non-significant $(p > 0.05)$ it tells us 
+that the distribution of the sample is not significantly 
+different from a normal distribution. If,
+however, the test is significant $(p < 0.05)$ then the 
+distribution in question
+is significantly different from a normal distribution (non-normal). 
+
+```{r, echo = TRUE}
+shapiro.test(maths)
+shapiro.test(stat)
+```
+
+Because both p-values are significantly bigger than 0.05 (0.948, 0.9986)
+we can consider that both datasets follow a normal distribution.
+
+For that we will use the method Pearson to calculate the correlation
+coefficient.
+
+```{r, echo = TRUE}
+cor.test(maths, stat, method='pearson')
+```
+So because we got a coefficient of $0.7835978$ we can tell that exists
+a high correlation between maths ant statistics score.
+
+You see the correlation by observing the scatter plot between the two.
+
+```{r, echo = TRUE, dev='png'}
+ggplot(data = scoreSet, aes(x = maths, y = stat))  + 
+  geom_point() + 
+  geom_smooth(formula = y ~ x, method = "lm", se = FALSE)
+```
+
+# Question 4 [5 marks]
+[Note: Save the read dataset in a variable called heartdisease. Do not change
+the variable name. For ex: heardisease <- read.csv("heartdisease.data")]
+
+Consider given dataset heartdisease.csv. Write code to do the 
+following.
+
+a) Assess the following variables for normality. [2 marks]
+* Cholesterol (Chol)
+* Blood Pressure (RestBP)
+* MaxHR
+b) Choose the test you think is correct based on your these variables
+- choose either Pearson, Spearman / Kendall to investigate the
+following: [3 marks]
+* Relationship between cholesterol and blood pressure;
+* Relationship between cholesterol and old peak.
+
+## Answer 4
+
+First we load the dataset
+```{r, echo = TRUE}
+heartdisease <- read.csv("heartdisease.csv")
+```
+
+Next we will test the three variables for normality with the Shapiro-Wilk test.
+
+```{r, echo = TRUE}
+shapiro.test(heartdisease$Chol)
+shapiro.test(heartdisease$RestBP)
+shapiro.test(heartdisease$MaxHR)
+```
+
+All the three values are bellow 0.05 so the data significantly deviate from a
+normal distribution. For skew data we use Spearman/Kendal correlation.
+
+For the relationship between cholesterol and blood pressure
+
+```{r, echo = TRUE}
+cor.test(heartdisease$Chol, heartdisease$RestBP, method = "spearman", exact = FALSE)
+```
+So the Correlation Coefficient value of 0.1358367 represents
+a *weak positive monotonic correlation*.
+
+The probability value is 0.018 and is less than 0.05 $\alpha$ threshold
+meaning that the observation is statistically significant. 
+
+So we assume that theres is a 
+*weak correlation between cholesterol and blood pressure*. 
+You can see the verify in the next plot.
+
+```{r, echo = TRUE, dev='png'}
+ggplot(data = heartdisease, aes(x = Chol, y = RestBP))  + 
+  geom_point() + 
+  geom_smooth(formula = y ~ x, method = "lm", se = FALSE)
+```
+
+Relationship 
+▪ Relationship between cholesterol and old peak
+
+First let't test the `Oldpeak` variable for normality.
+
+```{r, echo = TRUE}
+shapiro.test(heartdisease$Oldpeak)
+```
+Again we get a really low p-value suggesting that we are not talking about data
+not normally distributed. Again we will use the spearman test.
+
+```{r, echo = TRUE}
+cor.test(heartdisease$Chol, heartdisease$Oldpeak, method = "spearman", exact = FALSE)
+```
+The coefficient rho is 0.03435936 that represents a positive weak correlation
+as presented in the chart.
+
+```{r, echo = TRUE, dev='png'}
+ggplot(data = heartdisease, aes(x = Chol, y = Oldpeak))  + 
+  geom_point() + 
+  geom_smooth(formula = y ~ x, method = "lm", se = FALSE)
+```
+
+But because the p-value is above the assumed significant level $\alpha = 0.05$
+we *fail to reject the null hypothesis*. 
+We conclude that is no correlation/relationship between the cholesterol 
+and old peak for a significance level of $0.05$.
+
+# Question 5 [2 marks]
+Investigate whether there are differences between people who survive
+hepatitis and those who do not in each of the following variables.
+
+* BILIRUBIN;
+* SGOT.
+
+[Note: Save the read dataset in a variable called hepatitis. Do not change
+the variable name.
+For ex: `hepatitis <- read.csv("hepatitis.data")`.
+Dataset is available https://archive.ics.uci.edu/ml/datasets/Hepatitis.
+Use the code below to add header.]
+```
+#To add headers
+colnames(hepatitis) <- c("Class", "AGE", "SEX",
+"STEROID", "ANTIVIRALS", "FATIGUE", "MALAISE",
+
+"ANOREXIA", "LIVER BIG", "LIVER FIRM", "SPLEN
+PALPABLE", "SPIDERS", "ASCITES",
+"VARICES","BILIRUBIN","ALK PHOSPHATE",
+"SGOT","ALBMIN", "PROTIME", "HISTOLOGY")
+```
+
+## Answer 5
+
+---------------------------------------------------
+
+
+6. Formulate a hypothesis by considering ALK PHOSPHATE levels and
+hepatitis histology by considering hepatitis dataset. Mention whether
+you accept or reject the hypothesis. [2 marks]
+7. Investigate the following questions by considering the Hepatitis dataset.
+[2 marks]
+◦ Does Bilirubin level impact the Liver Firm?
+◦ Are there any differences in steroid level and hepatitis histology?
+
+
+

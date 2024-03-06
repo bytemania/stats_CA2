@@ -11,22 +11,27 @@ output:
     toc_depth: '2'
 ---
 
-```{r, echo = TRUE, results = "hide"}
-if (!require('knitr')) {
+```{r, echo = FALSE, results = "hide"}
+if (!require('knitr',quietly = TRUE)) {
   install.packages('knitr', repos = 'http://cran.us.r-project.org')
 }
 
-if (!require('ggplot2')) {
+if (!require('ggplot2', quietly = TRUE)) {
   install.packages('knitr', repos = 'http://cran.us.r-project.org')
 }
 
-if (!require('ggpubr')) {
+if (!require('ggpubr', quietly = TRUE)) {
   install.packages('ggpubr', repos = 'http://cran.us.r-project.org')
+}
+
+if (!require('psych', quietly = TRUE, warn.conflicts = FALSE)) {
+  install.packages('psych', repos = 'http://cran.us.r-project.org')
 }
 
 library(knitr)
 library(ggplot2)
 library(ggpubr)
+library(psych)
 ```
 
 # Question 1 [1 mark]
@@ -290,7 +295,6 @@ Use the code below to add header.]
 #To add headers
 colnames(hepatitis) <- c("Class", "AGE", "SEX",
 "STEROID", "ANTIVIRALS", "FATIGUE", "MALAISE",
-
 "ANOREXIA", "LIVER BIG", "LIVER FIRM", "SPLEN
 PALPABLE", "SPIDERS", "ASCITES",
 "VARICES","BILIRUBIN","ALK PHOSPHATE",
@@ -298,13 +302,138 @@ PALPABLE", "SPIDERS", "ASCITES",
 ```
 
 ## Answer 5
+First we need to load the data and add the headers. 
+
+```{r, echo = TRUE}
+hepatitis <- read.csv("hepatitis.data", quote="", na.strings = "?")
+
+colnames(hepatitis) <- c(
+  "Class", 
+  "AGE", 
+  "SEX",
+  "STEROID", 
+  "ANTIVIRALS", 
+  "FATIGUE", 
+  "MALAISE",
+  "ANOREXIA", 
+  "LIVER BIG", 
+  "LIVER FIRM", 
+  "SPLEN PALPABLE", 
+  "SPIDERS", 
+  "ASCITES",
+  "VARICES",
+  "BILIRUBIN",
+  "ALK PHOSPHATE",
+  "SGOT",
+  "ALBMIN", 
+  "PROTIME", 
+  "HISTOLOGY")
+```
+
+First thing that we will do is look at the data and the structure
+
+```{r, echo = TRUE}
+str(subset(hepatitis, select = c("Class", "BILIRUBIN", "SGOT")))
+```
+So `class` is refered as int but in fact its a categorical class. 
+We need to transform it in a character class type.
+
+```{r, echo = TRUE}
+hepatitis<- transform(hepatitis, Class = as.character(Class))
+str(subset(hepatitis, select = c("Class", "BILIRUBIN", "SGOT")))
+```
+Now lets take a look at the data: 
+```{r, echo = TRUE}
+head(subset(hepatitis, select = c("Class", "BILIRUBIN", "SGOT")))
+```
+`Class` is a categorical variable that determines if the patient died or not:
+ 
+ * 1 = DIE
+ * 2 = LIVE
+ It also does not has Missing values.
+ 
+ `BILIRUBIN` is a continuous variable that represents a yellowish pigment that
+ is made during the breakdown of red blood cells. It has 6 missing values.
+ 
+ `SGOT` is a integer variable that represents SGOT is a protein made by the
+ liver cells. It also has 4 missing values.
+ 
+```{r, echo = TRUE}
+sum(is.na(hepatitis$BILIRUBIN))
+sum(is.na(hepatitis$SGOT))
+```
+ 
+Now that we analyze the data we can describe it: 
+
+```{r, echo = TRUE}
+table(hepatitis$Class)
+psych::describe(hepatitis$BILIRUBIN)
+psych::describe(hepatitis$SGOT)
+``` 
+So we have a sample where 32 individuals died and 122 survived.
+
+Both `BILLRUBIN` and `SGOT` variables are positively skewed with 
+a high kurtosis so it it suggest a non-normal distribution.
+
+Now we will split the variables in survived not survived:
+
+```{r, echo = TRUE}
+hepatitis.BILLRUBIN.die = hepatitis[hepatitis$Class == 1, c("BILIRUBIN")]
+hepatitis.BILLRUBIN.survived = hepatitis[hepatitis$Class == 2, c("BILIRUBIN")]
+
+hepatitis.SGOT.die = hepatitis[hepatitis$Class == 1, c("SGOT")]
+hepatitis.SGOT.survived = hepatitis[hepatitis$Class == 2, c("SGOT")]
+``` 
+To test the normality we will use the 
+*Shapiro-Willis test for variables that die (32 size samples)*, and 
+*Kolmogorov-Smirnov (122 sample size)*
+
+```{r, echo = TRUE}
+shapiro.test(hepatitis.BILLRUBIN.survived)
+shapiro.test(hepatitis.SGOT.survived)
+
+ks.test(hepatitis.BILLRUBIN.die, "pnorm")
+ks.test(hepatitis.SGOT.die, "pnorm")
+``` 
+
+As we can notice none of the datasets follow a normal distribution.
+Because we are running a test for 2 groups of a continuous variable 
+with skewed data we choose the* Mann-Whitney U test to compare* the following 
+groups: 
+
+* hepatitis.BILLRUBIN.survived against hepatitis.BILLRUBIN.die
+* hepatitis.SGOT.survived against hepatitis.SGOT.die
+
+```{r, echo = TRUE}
+wilcox.test(hepatitis.BILLRUBIN.die, hepatitis.BILLRUBIN.survived)
+wilcox.test(hepatitis.SGOT.die, hepatitis.SGOT.survived)
+``` 
+
+In the first  hepatitis.BILLRUBIN.die and hepatitis.BILLRUBIN.survived
+we have p-value of 6.521e-06 so we reject the null hypothesis concluding
+that there is difference between then.
+
+For the second case hepatitis.SGOT.die and hepatitis.SGOT.survived
+we have a p-value = 0.2448 that is bigger than the $\alpha$ level of 0.05.
+So we fail to reject the null hypothesis and say that there is no statistical
+significant evidence that  hepatitis.SGOT.die and hepatitis.SGOT.survived are
+different.
+
+# Question 6 [2 marks]
+Formulate a hypothesis by considering ALK PHOSPHATE levels and 
+hepatitis histology by considering hepatitis dataset. Mention whether 
+you accept or reject the hypothesis.
+
+First we need to investigate
+
+* H0 - 
+
+
+## Answer 6
 
 ---------------------------------------------------
 
 
-6. Formulate a hypothesis by considering ALK PHOSPHATE levels and
-hepatitis histology by considering hepatitis dataset. Mention whether
-you accept or reject the hypothesis. [2 marks]
 7. Investigate the following questions by considering the Hepatitis dataset.
 [2 marks]
 ◦ Does Bilirubin level impact the Liver Firm?

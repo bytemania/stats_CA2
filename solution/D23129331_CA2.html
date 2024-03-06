@@ -386,21 +386,6 @@ marks]</a></li>
 </ul>
 </div>
 
-<pre class="r"><code>if (!require(&#39;knitr&#39;)) {
-  install.packages(&#39;knitr&#39;, repos = &#39;http://cran.us.r-project.org&#39;)
-}</code></pre>
-<pre><code>## Loading required package: knitr</code></pre>
-<pre class="r"><code>if (!require(&#39;ggplot2&#39;)) {
-  install.packages(&#39;knitr&#39;, repos = &#39;http://cran.us.r-project.org&#39;)
-}</code></pre>
-<pre><code>## Loading required package: ggplot2</code></pre>
-<pre class="r"><code>if (!require(&#39;ggpubr&#39;)) {
-  install.packages(&#39;ggpubr&#39;, repos = &#39;http://cran.us.r-project.org&#39;)
-}</code></pre>
-<pre><code>## Loading required package: ggpubr</code></pre>
-<pre class="r"><code>library(knitr)
-library(ggplot2)
-library(ggpubr)</code></pre>
 <div id="question-1-1-mark" class="section level1">
 <h1>Question 1 [1 mark]</h1>
 <p>A study was done in which the high daily temperature and the number
@@ -679,13 +664,150 @@ the code below to add header.]</p>
 <pre><code>#To add headers
 colnames(hepatitis) &lt;- c(&quot;Class&quot;, &quot;AGE&quot;, &quot;SEX&quot;,
 &quot;STEROID&quot;, &quot;ANTIVIRALS&quot;, &quot;FATIGUE&quot;, &quot;MALAISE&quot;,
-
 &quot;ANOREXIA&quot;, &quot;LIVER BIG&quot;, &quot;LIVER FIRM&quot;, &quot;SPLEN
 PALPABLE&quot;, &quot;SPIDERS&quot;, &quot;ASCITES&quot;,
 &quot;VARICES&quot;,&quot;BILIRUBIN&quot;,&quot;ALK PHOSPHATE&quot;,
 &quot;SGOT&quot;,&quot;ALBMIN&quot;, &quot;PROTIME&quot;, &quot;HISTOLOGY&quot;)</code></pre>
 <div id="answer-5" class="section level2">
 <h2>Answer 5</h2>
+<p>First we need to load the data and add the headers.</p>
+<pre class="r"><code>hepatitis &lt;- read.csv(&quot;hepatitis.data&quot;, quote=&quot;&quot;, na.strings = &quot;?&quot;)
+
+colnames(hepatitis) &lt;- c(
+  &quot;Class&quot;, 
+  &quot;AGE&quot;, 
+  &quot;SEX&quot;,
+  &quot;STEROID&quot;, 
+  &quot;ANTIVIRALS&quot;, 
+  &quot;FATIGUE&quot;, 
+  &quot;MALAISE&quot;,
+  &quot;ANOREXIA&quot;, 
+  &quot;LIVER BIG&quot;, 
+  &quot;LIVER FIRM&quot;, 
+  &quot;SPLEN PALPABLE&quot;, 
+  &quot;SPIDERS&quot;, 
+  &quot;ASCITES&quot;,
+  &quot;VARICES&quot;,
+  &quot;BILIRUBIN&quot;,
+  &quot;ALK PHOSPHATE&quot;,
+  &quot;SGOT&quot;,
+  &quot;ALBMIN&quot;, 
+  &quot;PROTIME&quot;, 
+  &quot;HISTOLOGY&quot;)</code></pre>
+<p>First thing that we will do is look at the data and the structure</p>
+<pre class="r"><code>str(subset(hepatitis, select = c(&quot;Class&quot;, &quot;BILIRUBIN&quot;, &quot;SGOT&quot;)))</code></pre>
+<pre><code>## &#39;data.frame&#39;:    154 obs. of  3 variables:
+##  $ Class    : int  2 2 2 2 2 1 2 2 2 2 ...
+##  $ BILIRUBIN: num  0.9 0.7 0.7 1 0.9 NA 1 0.7 1 1.3 ...
+##  $ SGOT     : int  42 32 52 200 28 NA NA 48 120 30 ...</code></pre>
+<p>So <code>class</code> is refered as int but in fact its a categorical
+class. We need to transform it in a character class type.</p>
+<pre class="r"><code>hepatitis&lt;- transform(hepatitis, Class = as.character(Class))
+str(subset(hepatitis, select = c(&quot;Class&quot;, &quot;BILIRUBIN&quot;, &quot;SGOT&quot;)))</code></pre>
+<pre><code>## &#39;data.frame&#39;:    154 obs. of  3 variables:
+##  $ Class    : chr  &quot;2&quot; &quot;2&quot; &quot;2&quot; &quot;2&quot; ...
+##  $ BILIRUBIN: num  0.9 0.7 0.7 1 0.9 NA 1 0.7 1 1.3 ...
+##  $ SGOT     : int  42 32 52 200 28 NA NA 48 120 30 ...</code></pre>
+<p>Now lets take a look at the data:</p>
+<pre class="r"><code>head(subset(hepatitis, select = c(&quot;Class&quot;, &quot;BILIRUBIN&quot;, &quot;SGOT&quot;)))</code></pre>
+<pre><code>##   Class BILIRUBIN SGOT
+## 1     2       0.9   42
+## 2     2       0.7   32
+## 3     2       0.7   52
+## 4     2       1.0  200
+## 5     2       0.9   28
+## 6     1        NA   NA</code></pre>
+<p><code>Class</code> is a categorical variable that determines if the
+patient died or not:</p>
+<ul>
+<li>1 = DIE</li>
+<li>2 = LIVE It also does not has Missing values.</li>
+</ul>
+<p><code>BILIRUBIN</code> is a continuous variable that represents a
+yellowish pigment that is made during the breakdown of red blood cells.
+It has 6 missing values.</p>
+<p><code>SGOT</code> is a integer variable that represents SGOT is a
+protein made by the liver cells. It also has 4 missing values.</p>
+<pre class="r"><code>sum(is.na(hepatitis$BILIRUBIN))</code></pre>
+<pre><code>## [1] 6</code></pre>
+<pre class="r"><code>sum(is.na(hepatitis$SGOT))</code></pre>
+<pre><code>## [1] 4</code></pre>
+<p>Now that we analyze the data we can describe it:</p>
+<pre class="r"><code>table(hepatitis$Class)</code></pre>
+<pre><code>## 
+##   1   2 
+##  32 122</code></pre>
+<pre class="r"><code>psych::describe(hepatitis$BILIRUBIN)</code></pre>
+<pre><code>##    vars   n mean   sd median trimmed  mad min max range skew kurtosis  se
+## X1    1 148 1.43 1.22      1    1.17 0.44 0.3   8   7.7 2.82     9.59 0.1</code></pre>
+<pre class="r"><code>psych::describe(hepatitis$SGOT)</code></pre>
+<pre><code>##    vars   n  mean    sd median trimmed   mad min max range skew kurtosis   se
+## X1    1 150 86.35 89.78     58   68.74 41.51  14 648   634 3.11    13.25 7.33</code></pre>
+<p>So we have a sample where 32 individuals died and 122 survived.</p>
+<p>Both <code>BILLRUBIN</code> and <code>SGOT</code> variables are
+positively skewed with a high kurtosis so it it suggest a non-normal
+distribution.</p>
+<p>Now we will split the variables in survived not survived:</p>
+<pre class="r"><code>hepatitis.BILLRUBIN.die = hepatitis[hepatitis$Class == 1, c(&quot;BILIRUBIN&quot;)]
+hepatitis.BILLRUBIN.survived = hepatitis[hepatitis$Class == 2, c(&quot;BILIRUBIN&quot;)]
+
+hepatitis.SGOT.die = hepatitis[hepatitis$Class == 1, c(&quot;SGOT&quot;)]
+hepatitis.SGOT.survived = hepatitis[hepatitis$Class == 2, c(&quot;SGOT&quot;)]</code></pre>
+<p>To test the normality we will use the <em>Shapiro-Willis test for
+variables that die (32 size samples)</em>, and <em>Kolmogorov-Smirnov
+(122 sample size)</em></p>
+<pre class="r"><code>shapiro.test(hepatitis.BILLRUBIN.survived)</code></pre>
+<pre><code>## 
+##  Shapiro-Wilk normality test
+## 
+## data:  hepatitis.BILLRUBIN.survived
+## W = 0.68454, p-value = 1.394e-14</code></pre>
+<pre class="r"><code>shapiro.test(hepatitis.SGOT.survived)</code></pre>
+<pre><code>## 
+##  Shapiro-Wilk normality test
+## 
+## data:  hepatitis.SGOT.survived
+## W = 0.67244, p-value = 5.344e-15</code></pre>
+<pre class="r"><code>ks.test(hepatitis.BILLRUBIN.die, &quot;pnorm&quot;)</code></pre>
+<pre><code>## Warning in ks.test.default(hepatitis.BILLRUBIN.die, &quot;pnorm&quot;): ties should not
+## be present for the Kolmogorov-Smirnov test</code></pre>
+<pre><code>## 
+##  Asymptotic one-sample Kolmogorov-Smirnov test
+## 
+## data:  hepatitis.BILLRUBIN.die
+## D = 0.68261, p-value = 1.444e-12
+## alternative hypothesis: two-sided</code></pre>
+<pre class="r"><code>ks.test(hepatitis.SGOT.die, &quot;pnorm&quot;)</code></pre>
+<pre><code>## Warning in ks.test.default(hepatitis.SGOT.die, &quot;pnorm&quot;): ties should not be
+## present for the Kolmogorov-Smirnov test</code></pre>
+<pre><code>## 
+##  Asymptotic one-sample Kolmogorov-Smirnov test
+## 
+## data:  hepatitis.SGOT.die
+## D = 1, p-value &lt; 2.2e-16
+## alternative hypothesis: two-sided</code></pre>
+<p>As we can notice none of the datasets follow a normal distribution.
+Because we are running a test for 2 groups of a continuous variable with
+skewed data we choose the* Mann-Whitney U test to compare* the following
+groups:</p>
+<ul>
+<li>hepatitis.BILLRUBIN.survived against hepatitis.BILLRUBIN.die</li>
+<li>hepatitis.SGOT.survived against hepatitis.SGOT.die</li>
+</ul>
+<pre class="r"><code>wilcox.test(hepatitis.BILLRUBIN.die, hepatitis.BILLRUBIN.survived)</code></pre>
+<pre><code>## 
+##  Wilcoxon rank sum test with continuity correction
+## 
+## data:  hepatitis.BILLRUBIN.die and hepatitis.BILLRUBIN.survived
+## W = 2710, p-value = 6.521e-06
+## alternative hypothesis: true location shift is not equal to 0</code></pre>
+<pre class="r"><code>wilcox.test(hepatitis.SGOT.die, hepatitis.SGOT.survived)</code></pre>
+<pre><code>## 
+##  Wilcoxon rank sum test with continuity correction
+## 
+## data:  hepatitis.SGOT.die and hepatitis.SGOT.survived
+## W = 2048, p-value = 0.2448
+## alternative hypothesis: true location shift is not equal to 0</code></pre>
 <hr />
 <ol start="6" style="list-style-type: decimal">
 <li>Formulate a hypothesis by considering ALK PHOSPHATE levels and

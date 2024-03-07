@@ -509,11 +509,12 @@ ggqqplot(hepatitis.ALK.PHOSPHATE.NO_HISTOLOGY[!is.na(hepatitis.ALK.PHOSPHATE.NO_
 ```{r, echo = TRUE, dev='png'}
 ggqqplot(hepatitis.ALK.PHOSPHATE.HISTOLOGY[!is.na(hepatitis.ALK.PHOSPHATE.HISTOLOGY)], ylab = "ALK.PHOSPHATE.NO_HISTOLOGY Quantiles", xlab="Normal Quantiles")
 ```
-So we have two continuous groups with skewed data so we go with
+So we have two independent groups with skewed data so we go with
 *Mann-Whitney U test*
 ```{r, echo = TRUE, dev='png'}
 wilcox.test(hepatitis.ALK.PHOSPHATE.NO_HISTOLOGY, hepatitis.ALK.PHOSPHATE.HISTOLOGY)
 ```
+
 To run the test we can use also the heaptitis dataset producing the same result.
 ```{r, echo = TRUE, dev='png'}
 wilcox.test(ALK.PHOSPHATE ~ HISTOLOGY, data = hepatitis)
@@ -530,6 +531,63 @@ Investigate the following questions by considering the Hepatitis dataset.
 
 ## Answer 7
 
+For the this question we will do all the previous steps to answer.
 
+We will also split this in question in 2 parts:
+
+* Does the Bilirubin level impact the liver firm?
+* Are there any differences in steroid level and hepatitis histology?
+
+So for the first part we start analysing the variables.
+`LIVER.FIRM` is a categorical binary variable that has two values:
+
+* 1 - no
+* 2 - yes
+
+It has 60 - no, 83 - yes and 11 missing data.
+
+```{r, echo = TRUE}
+table(hepatitis$LIVER.FIRM)
+sum(is.na(hepatitis$LIVER.FIRM))
+```
+`BILIRUBIN` We already analise the data previously. It represents a 
+continuous variable skewed. It has 6 missing values.
+
+```{r, echo = TRUE}
+summary(hepatitis$BILIRUBIN)
+```
+
+So we have 2 independent groups given by the categorical variable. We will
+use once again *Mann-Whitney U test*
+
+```{r, echo = TRUE, dev='png'}
+wilcox.test(hepatitis$BILIRUBIN ~ LIVER.FIRM, data = hepatitis)
+```
+So we got a p-value of 0.08598 and we fail to reject a null hypothesis.
+So we can conclude that there is no relation between `BILIRUBIN` and `LIVER.FIRM`
+for one confidence-level at 0.05.
+
+The second part of the question we have two categorical variables. 
+The `HISTOLOGY` we already analyze previously.
+The `STEROID` level variable has two values:
+
+* 1 - no (75 samples);
+* 2 - yes (78 samples).
+
+And has 1 missing value.
+
+```{r, echo = TRUE}
+table(hepatitis$STEROID)
+sum(is.na(hepatitis$STEROID))
+```
+So we have two independent groups with two categorical variables.
+We will use the $\chi^2$ test.
+
+```{r, echo = TRUE}
+chisq.test(hepatitis$STEROID, hepatitis$HISTOLOGY)
+```
+The result shows that there is no relation between the Steroid and histology
+variables because the p-value (0.0301) is higher than the confidence level
+established (0.05). In this scenario we *failed to reject the null hipotheses*.
 
 

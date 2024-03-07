@@ -424,20 +424,112 @@ Formulate a hypothesis by considering ALK PHOSPHATE levels and
 hepatitis histology by considering hepatitis dataset. Mention whether 
 you accept or reject the hypothesis.
 
-First we need to investigate
-
-* H0 - 
-
-
 ## Answer 6
 
----------------------------------------------------
+Before we formulate an hypothesis we need to understand
+the dataset and the variables
 
+The alkaline phosphatase (ALP) test measures how much alkaline
+phosphatase you have in your blood. Alkaline phosphatase is 
+an enzyme found throughout your body. But it is mainly in your 
+liver, bone, kidney, and digestive tract. Conditions such as liver
+cancer, cirrhosis, and hepatitis can also cause ALP levels to rise.
+This value is our dataset is represented as a range between 26 and 295
+(incluse) it also has missing 29 values.
 
-7. Investigate the following questions by considering the Hepatitis dataset.
-[2 marks]
-◦ Does Bilirubin level impact the Liver Firm?
-◦ Are there any differences in steroid level and hepatitis histology?
+Liver biopsy (LB) is the gold standard method for assessment of liver histology.
+So we can identify if we have liver histology via biopsy. So in our dataset
+we have a categorical variable that indicates if we histology was indentified 
+in the liver or not. The values that the dataset provides are:
+
+* 1 no;
+* 2 yes.
+
+Considering this we assume that what we want here is to verify is
+when alkaline phosphatase ALP increases (ALK PHOSPHATE levels) this is 
+related with the hepatitis histology detection or not.
+
+Now looking at the data we have the following results:
+```{r, echo = TRUE}
+psych::describe(hepatitis$ALK.PHOSPHATE)
+table(hepatitis$HISTOLOGY)
+``` 
+We can tell that HISTOLOGY is a relatively well distribute about its categories
+(84 no and 70 yes) and the ALK PHOSPHATE has a positive skew meaning a 
+right-skewed distribution (mean higher than the median) and a peaked kurthosis.
+
+So we consider the following null hypothesis:
+
+* There is no difference in ALK PHOSPHATE levels between
+different histology categories of hepatitis.
+
+* There is a difference in ALK PHOSPHATE levels between different
+histology categories of hepatitis.
+
+Because we are talking about the same population a good measure to verify
+is the mean (because we are talking about a continuous variable I think that)
+is more appropriate.
+
+* $H_0$: There is no difference in the ALK.PHOSPHATE mean if histology is 
+either true or false.
+
+* $H_a$: There is difference in the ALK.PHOSPHATE mean if histology is 
+either true or false.
+
+The Significance Level established for the test will be $\alpha = 0.05$
+
+So we will performa a two-tailed test.
+
+Now as the previous exercise we will split the `ALK.PHOSPHATE` between 
+the `HISTOLOGY` categories:
+
+```{r, echo = TRUE}
+hepatitis.ALK.PHOSPHATE.NO_HISTOLOGY <- hepatitis[hepatitis$HISTOLOGY == 1, c("ALK.PHOSPHATE")] 
+hepatitis.ALK.PHOSPHATE.HISTOLOGY <- hepatitis[hepatitis$HISTOLOGY == 2, c("ALK.PHOSPHATE")]
+```
+
+Samples bigger than 50 so we go to Kolmogorov-Smirnov test to test 
+if the samples follow a normal distribution.
+
+```{r, echo = TRUE}
+ks.test(hepatitis.ALK.PHOSPHATE.NO_HISTOLOGY, "pnorm")
+ks.test(hepatitis.ALK.PHOSPHATE.HISTOLOGY, "pnorm")
+``` 
+We got two extreme low values so we reject the null hypothesis, so we can tell 
+that the 
+* hepatitis.ALK.PHOSPHATE.NO_HISTOLOGY and hepatitis.ALK.PHOSPHATE.HISTOLOGY*
+* does not follow a normal distribution*.
+
+You can confirm this looking at the next QQ-Plots.
+
+```{r, echo = TRUE, dev='png'}
+ggqqplot(hepatitis.ALK.PHOSPHATE.NO_HISTOLOGY[!is.na(hepatitis.ALK.PHOSPHATE.NO_HISTOLOGY)], ylab = "ALK.PHOSPHATE.NO_HISTOLOGY Quantiles", xlab="Normal Quantiles")
+```
+
+```{r, echo = TRUE, dev='png'}
+ggqqplot(hepatitis.ALK.PHOSPHATE.HISTOLOGY[!is.na(hepatitis.ALK.PHOSPHATE.HISTOLOGY)], ylab = "ALK.PHOSPHATE.NO_HISTOLOGY Quantiles", xlab="Normal Quantiles")
+```
+So we have two continuous groups with skewed data so we go with
+*Mann-Whitney U test*
+```{r, echo = TRUE, dev='png'}
+wilcox.test(hepatitis.ALK.PHOSPHATE.NO_HISTOLOGY, hepatitis.ALK.PHOSPHATE.HISTOLOGY)
+```
+To run the test we can use also the heaptitis dataset producing the same result.
+```{r, echo = TRUE, dev='png'}
+wilcox.test(ALK.PHOSPHATE ~ HISTOLOGY, data = hepatitis)
+```
+Because the p-value is lower than the established $\alpha = 0.05$ we reject
+the null hypotesis and we can tell that *there is a relationship* between the
+ALK.PHOSPHATE and HISTOLOGY variables.
+
+# Question 7 [2 marks]
+Investigate the following questions by considering the Hepatitis dataset.
+
+* Does the Bilirubin level impact the liver firm?
+* Are there any differences in steroid level and hepatitis histology?
+
+## Answer 7
+
 
 
 
